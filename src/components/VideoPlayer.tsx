@@ -1,5 +1,5 @@
 import { useRef, useEffect } from 'react';
-import { Box } from '@chakra-ui/react';
+import { Box } from '@mui/material';
 
 type VideoPlayerProps = {
   stream: MediaStream | null;
@@ -20,15 +20,15 @@ export const VideoPlayer = ({ stream, isLocal = false }: VideoPlayerProps) => {
 
   return (
     <Box
-      as="video"
+      component="video"
       ref={videoRef}
-      width="100%"
-      height="auto"
-      borderRadius="lg"
-      {...{
-        autoPlay: true,
-        playsInline: true,
+      sx={{
+        width: '100%',
+        height: 'auto',
+        borderRadius: 2,
       }}
+      autoPlay
+      playsInline
     />
   );
 };

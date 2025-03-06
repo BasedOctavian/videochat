@@ -2,19 +2,30 @@ import { useState, useRef } from 'react';
 import { collection, doc, getDoc, onSnapshot, updateDoc, setDoc } from 'firebase/firestore';
 import { firestore } from '../firebase/init';
 import { servers } from '../firebase/config';
-import { Box, Button, Input, HStack } from '@chakra-ui/react';
+import { Paper, Button, TextField, Stack } from '@mui/material';
 
 type CallControlsProps = {
   pc: React.MutableRefObject<RTCPeerConnection | null>;
   setLocalStream: (stream: MediaStream | null) => void;
   setRemoteStream: (stream: MediaStream | null) => void;
+  colorMode: 'light' | 'dark'; // Add colorMode prop
 };
 
-export const CallControls = ({ pc, setLocalStream, setRemoteStream }: CallControlsProps) => {
+export const CallControls = ({
+  pc,
+  setLocalStream,
+  setRemoteStream,
+  colorMode, // Destructure colorMode prop
+}: CallControlsProps) => {
   const [callId, setCallId] = useState('');
   const [webcamStarted, setWebcamStarted] = useState(false);
   const localStreamRef = useRef<MediaStream | null>(null);
   const remoteStreamRef = useRef<MediaStream>(new MediaStream());
+
+  // Define colors based on color mode
+  const paperBgColor = colorMode === 'light' ? 'grey.100' : 'grey.800';
+  const buttonColor = colorMode === 'light' ? 'primary' : 'secondary';
+  const textFieldBgColor = colorMode === 'light' ? 'background.paper' : 'grey.700';
 
   const startWebcam = async () => {
     try {
@@ -125,29 +136,40 @@ export const CallControls = ({ pc, setLocalStream, setRemoteStream }: CallContro
   };
 
   return (
-    <Box p={4} bg="gray.100" rounded="lg" display="flex" flexDirection="column" gap={4}>
+    <Paper
+      sx={{
+        p: 2,
+        bgcolor: paperBgColor, // Use dynamic background color
+        borderRadius: 2,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2,
+      }}
+    >
       {!webcamStarted ? (
-        <Button colorScheme="blue" onClick={startWebcam}>
+        <Button variant="contained" color={buttonColor} onClick={startWebcam}>
           Start Webcam
         </Button>
       ) : (
-        <HStack gap={4}>
-          <Input
+        <Stack direction="row" spacing={2}>
+          <TextField
             value={callId}
             onChange={(e) => setCallId(e.target.value)}
             placeholder="Call ID"
+            variant="outlined"
+            sx={{ bgcolor: textFieldBgColor }} // Use dynamic background color
           />
-          <Button colorScheme="orange" onClick={createCall}>
+          <Button variant="contained" color={buttonColor} onClick={createCall}>
             Create Call
           </Button>
-          <Button colorScheme="green" onClick={answerCall}>
+          <Button variant="contained" color={buttonColor} onClick={answerCall}>
             Answer Call
           </Button>
-          <Button colorScheme="red" onClick={stopWebcam}>
+          <Button variant="contained" color="error" onClick={stopWebcam}>
             Stop Webcam
           </Button>
-        </HStack>
+        </Stack>
       )}
-    </Box>
+    </Paper>
   );
 };

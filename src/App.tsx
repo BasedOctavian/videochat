@@ -1,48 +1,48 @@
-import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ChakraProvider, defaultSystem } from '@chakra-ui/react';
-import { initializeApp } from 'firebase/app';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
-import Signup from './pages/Signup';
-import Login from './pages/Login';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import { useAuth } from './hooks/auth'; // Import the useAuth hook
 import VideoCall from './pages/VideoCall';
-import { firebaseConfig } from './firebase/config';
-
-// Initialize Firebase once at the top level
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import { firestore } from './firebase/init';
 
 export default function App() {
-  const [user, setUser] = useState<any>(null); // Store the current user
+  const { user, loading } = useAuth(); // Use the useAuth hook
 
-  // Set up auth state listener
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser); // Update user state when auth state changes
-    });
-    return () => unsubscribe(); // Cleanup listener on unmount
-  }, []);
+  // Create a custom theme (optional)
+  const theme = createTheme({
+    palette: {
+      mode: 'light', // You can change to 'dark' for a dark theme
+      primary: {
+        main: '#3182ce',
+      },
+    },
+  });
 
-  useEffect(() => {
-    console.log('User state changed:',auth.currentUser); // Log user state changes
-  }, [auth]);
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
-    <ChakraProvider value={defaultSystem}>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
       <Router>
         <Routes>
-          {/* Public routes */}
-          <Route path="/signup" element={<Signup auth={auth} />} />
-          <Route path="/login" element={<Login auth={auth} />} />
-          {/* Protected route: VideoCall only if user is logged in */}
+          {/* Redirect to home if user is already logged in */}
+          <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
+          <Route path="/signup" element={user ? <Navigate to="/" /> : <Signup />} />
+
+          {/* Protect the home route */}
           <Route
             path="/"
-            element={user ? <VideoCall db={db} /> : <Navigate to="/signup" />}
+            element={user ? <VideoCall db={firestore} user={user} /> : <Navigate to="/login" />}
           />
+
+          {/* Catch-all route */}
+          <Route path="*" element={user ? <Navigate to="/" /> : <Navigate to="/login" />} />
         </Routes>
       </Router>
-    </ChakraProvider>
+    </ThemeProvider>
   );
 }
